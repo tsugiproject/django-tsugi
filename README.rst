@@ -52,11 +52,13 @@ Releasing A Version
 
     python3 setup.py sdist
 
-The artifacts reside in `dist`
+The artifacts reside in `dist`. To install locally:
 
-To install locally:
+    pip install --user dist/django-tsugi-0.1.tar.gz
 
-    pip install --user django-tsugi/dist/django-tsugi-0.1.tar.gz
+Or
+
+    pip3 install dist/django-tsugi-0.1.tar.gz
 
 To uninstall
 

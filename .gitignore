@@ -5,3 +5,7 @@ venv
 *.swp
 .DS_Store
 db.sqlite3
+
+dist/
+django_tsugi.egg-info/
+

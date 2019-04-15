@@ -1,5 +1,5 @@
 
-from tsugi.LTIX import *
+from django_tsugi.LTIX import *
 from django.core.exceptions import PermissionDenied
 
 class TsugiMixin():
