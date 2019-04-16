@@ -15,7 +15,7 @@ setup(
     license='Apache License',  # example license
     description='Library code to help write Python Tools that use the Tsugi library to integrate into Learning Management Systems.',
     long_description=README,
-    url='https://www.tsugi.org/',
+    url='https://github.com/tsugiproject/django-tsugi.git',
     author='Charles Severance (Dr. Chuck)',
     author_email='drchuck@learnxp.com',
     classifiers=[
@@ -30,6 +30,12 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+    ],
+    install_requires=[
+        'cryptography>=2.5',
+        'Django>=2.1.7',
+        'PyJWT>=1.7.1',
+        'requests>=2.17.3',
     ],
 )
 
