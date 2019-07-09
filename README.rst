@@ -13,12 +13,16 @@ Quick start
 
         pip install django-tsugi    # or pip3
 
-2. Add "django_tsugi" to your INSTALLED_APPS setting like this::
+2. Add "django_tsugi" to your INSTALLED_APPS and add the keyset url for your 
+   controlling server in `settings.py` like this:
 
         INSTALLED_APPS = [
             ...
             'django_tsugi',
         ]
+
+        # To set up Tsugi
+        TSUGI_KEYSET = "https://dev1.tsugicloud.org/tsugi/lti/keyset-ext";
 
 3. Add a line to your application's `urls.py` file to handle launches and
    tell Tsugi which view to redirect to after the launch is successful.
@@ -52,8 +56,11 @@ Quick start
             context = {'tsugi': request.tsugi, 'retval' : retval}
             return render(request, 'grade/done.html', context)
 
-Releasing to pypy.org
----------------------
+Revising and testing locally
+----------------------------
+
+If you are working on a new version of this library with a django
+tsugi app, you can release a new version locally with:
 
     python3 setup.py sdist
 
@@ -69,9 +76,17 @@ To uninstall
 
     pip uninstall django-tsugi
 
-To Upload
+If you are running your Django tool locally and Tsugi locally, you 
+can use the following in `settings.py`:
 
-    pip3 install twine
+    TSUGI_KEYSET = "http://localhost:8888/tsugi/lti/keyset-ext";
+
+Releasing to pypy.org
+---------------------
+
+    python3 setup.py sdist
+
+    pip3 install twine   # If needed
 
     twine upload dist/*
 
@@ -83,3 +98,4 @@ References
 [2] Tutorial on Packaging and Distributing Projects - https://packaging.python.org/tutorials/packaging-projects/
 
 [3] https://pypi.org/ - https://packaging.python.org/tutorials/packaging-projects/#uploading-the-distribution-archives
+
