@@ -14,7 +14,7 @@ Quick start
         pip install django-tsugi    # or pip3
 
 2. Add "django_tsugi" to your INSTALLED_APPS and add the keyset url for your
-   controlling server in `settings.py` like this:
+   controlling server in `settings.py` like this::
 
         INSTALLED_APPS = [
             ...
@@ -25,7 +25,7 @@ Quick start
         TSUGI_KEYSET = "https://dev1.tsugicloud.org/tsugi/lti/keyset-ext";
 
 3. Add a line to your application's `urls.py` file to handle launches and
-   tell Tsugi which view to redirect to after the launch is successful.
+   tell Tsugi which view to redirect to after the launch is successful::
 
         from . import views
         from django_tsugi.views import LaunchView
@@ -37,7 +37,7 @@ Quick start
 
 4. Add the TsugiMixin to your class based view and it will define
    the `request.tsugi` variable with the user, context, and link
-   information.
+   information::
 
        from django.views import View
        from django_tsugi.mixins import TsugiMixin
@@ -56,35 +56,44 @@ Quick start
             context = {'tsugi': request.tsugi, 'retval' : retval}
             return render(request, 'grade/done.html', context)
 
+Releasing to pypy.org
+---------------------
+
+Here is how to release::
+
+    python3 setup.py sdist
+
+    pip3 install twine           # If needed
+    pip install --upgrade twine  # If needed
+    pip3 install twine==1.12.1   # If needed since
+
+    twine check dist/*
+
+    twine upload dist/*
+
+Make sure to change the version in `setup.py` after you release.
+
 Revising and testing locally
 ----------------------------
 
 If you are running your Django tool locally and Tsugi locally, you
-can use the following in `settings.py`:
+can use the following in `settings.py`::
 
     TSUGI_KEYSET = "http://localhost:8888/tsugi/lti/keyset-ext";
 
 If you are working on a new version of this library with a django
-tsugi app, you can release a new version locally with:
+tsugi app, you can release a new version locally with::
 
     python3 setup.py sdist
 
-The artifacts reside in `dist`. To install locally:
+The artifacts reside in `dist`. To install locally::
 
-    pip3 install --user dist/django-tsugi-0.1.2.tar.gz
+    pip3 install --user dist/django-tsugi-0.1.*.tar.gz
 
-Or
+Or::
 
-    pip3 install dist/django-tsugi-0.1.2.tar.gz
+    pip3 install dist/django-tsugi-0.1.*.tar.gz
 
-Releasing to pypy.org
----------------------
-
-    python3 setup.py sdist
-
-    pip3 install twine   # If needed
-
-    twine upload dist/*
 
 References
 ----------

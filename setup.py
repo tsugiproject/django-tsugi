@@ -36,6 +36,7 @@ setup(
         'Django>=2.1.7',
         'PyJWT>=1.7.1',
         'requests>=2.17.3',
+        'jwcrypto>=0.6.0'
     ],
 )
 
