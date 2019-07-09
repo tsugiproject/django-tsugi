@@ -18,11 +18,12 @@ TSUGI_ERROR_URL = "https://www.tsugi.org/djangoerror"
 
 class LaunchView(View) :
 
-    def launcherror(self, error, detail=false) :
+    def launcherror(self, error, detail=False) :
         url = TSUGI_ERROR_URL + '?detail=' + urllib.parse.urlencode({'detail': error})
-        retval = HttpResponseRedirect(url)
-        if ( detail ) retval['X-Tsugi-Detail'] = detail;
-        return redirect(url)
+        # retval = HttpResponseRedirect(url)
+        retval = redirect(url)
+        if ( detail ) : retval['X-Tsugi-Detail'] = detail
+        return retval
 
     def get(self, request, success_url) :
         return self.launcherror('This is a Launch URL, expecting a POST with a JWT to initiate a launch')
@@ -81,10 +82,9 @@ class LaunchView(View) :
                 TSUGI_JWK_LIST.clear()
             TSUGI_JWK_LIST[kid] = public_key
 
-        print(public_key)
-
         try:
             lti_launch = jwt.decode(encoded, public_key, algorithms=['RS256'])
+            print('Forwarding valid launch')
             print(lti_launch)
         except:
             return self.launcherror('Could not validate JSON Web Token signature',encoded)
