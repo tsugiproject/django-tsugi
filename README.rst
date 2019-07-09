@@ -11,7 +11,7 @@ Quick start
 
 1.  Install
 
-        pip install django-tsugi
+        pip install django-tsugi    # or pip3
 
 2. Add "django_tsugi" to your INSTALLED_APPS setting like this::
 
@@ -59,11 +59,11 @@ Releasing to pypy.org
 
 The artifacts reside in `dist`. To install locally:
 
-    pip install --user dist/django-tsugi-0.1.tar.gz
+    pip install --user dist/django-tsugi-0.1.2.tar.gz
 
 Or
 
-    pip3 install dist/django-tsugi-0.1.tar.gz
+    pip3 install dist/django-tsugi-0.1.2.tar.gz
 
 To uninstall
 
