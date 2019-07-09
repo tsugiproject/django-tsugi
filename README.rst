@@ -56,22 +56,28 @@ Quick start
             context = {'tsugi': request.tsugi, 'retval' : retval}
             return render(request, 'grade/done.html', context)
 
-Releasing to pypy.org
+Releasing to pypi.org
 ---------------------
 
-Here is how to release::
+We release to https://pypi.org/project/django-tsugi/
 
-    python3 setup.py sdist
+You need `twine` to push changes to pypi::
 
     pip3 install twine           # If needed
     pip install --upgrade twine  # If needed
-    pip3 install twine==1.12.1   # If needed since
+    pip3 install twine==1.12.1   # If needed since later twines mess up
+
+To release a whole new version, update the version in `setup.py` and then::
+
+    rm dist/*
+
+    python3 setup.py sdist
 
     twine check dist/*
 
     twine upload dist/*
 
-Make sure to change the version in `setup.py` after you release.
+You cannot upload the same version number twice.
 
 Revising and testing locally
 ----------------------------
