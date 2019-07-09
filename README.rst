@@ -94,11 +94,11 @@ tsugi app, you can release a new version locally with::
 
 The artifacts reside in `dist`. To install locally::
 
-    pip3 install --user dist/django-tsugi-0.1.*.tar.gz
+    pip3 install --user dist/django-tsugi-*.tar.gz
 
 Or::
 
-    pip3 install dist/django-tsugi-0.1.*.tar.gz
+    pip3 install dist/django-tsugi-*.tar.gz
 
 
 References
