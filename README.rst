@@ -13,7 +13,7 @@ Quick start
 
         pip install django-tsugi    # or pip3
 
-2. Add "django_tsugi" to your INSTALLED_APPS and add the keyset url for your 
+2. Add "django_tsugi" to your INSTALLED_APPS and add the keyset url for your
    controlling server in `settings.py` like this:
 
         INSTALLED_APPS = [
@@ -29,7 +29,7 @@ Quick start
 
         from . import views
         from django_tsugi.views import LaunchView
-    
+
         urlpatterns = [
             path('', views.GradeView.as_view(), name='grade' ),
             path('launch', LaunchView.as_view(), {'success_url' : 'grade'} ),
@@ -59,6 +59,11 @@ Quick start
 Revising and testing locally
 ----------------------------
 
+If you are running your Django tool locally and Tsugi locally, you
+can use the following in `settings.py`:
+
+    TSUGI_KEYSET = "http://localhost:8888/tsugi/lti/keyset-ext";
+
 If you are working on a new version of this library with a django
 tsugi app, you can release a new version locally with:
 
@@ -66,20 +71,11 @@ tsugi app, you can release a new version locally with:
 
 The artifacts reside in `dist`. To install locally:
 
-    pip install --user dist/django-tsugi-0.1.2.tar.gz
+    pip3 install --user dist/django-tsugi-0.1.2.tar.gz
 
 Or
 
     pip3 install dist/django-tsugi-0.1.2.tar.gz
-
-To uninstall
-
-    pip uninstall django-tsugi
-
-If you are running your Django tool locally and Tsugi locally, you 
-can use the following in `settings.py`:
-
-    TSUGI_KEYSET = "http://localhost:8888/tsugi/lti/keyset-ext";
 
 Releasing to pypy.org
 ---------------------

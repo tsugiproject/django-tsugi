@@ -32,7 +32,13 @@ class LaunchView(View) :
 
         # Lets get the keyset, retrieve the key, and cache it
         if public_key == False :
-            dat = urllib.request.urlopen(settings.TSUGI_KEYSET).read();
+            try :
+                keyset_url = settings.TSUGI_KEYSET
+            except :
+                print("Please set TSUGI_KEYSET in your settings.py, using dev1.tsugicloud.org as default")
+                keyset_url = "https://dev1.tsugicloud.org/tsugi/lti/keyset-ext"
+
+            dat = urllib.request.urlopen(keyset_url).read();
 
             # https://github.com/latchset/jwcrypto/blob/master/jwcrypto/tests.py
             # https://jwcrypto.readthedocs.io/en/latest/jwk.html#classes
