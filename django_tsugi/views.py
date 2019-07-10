@@ -6,8 +6,7 @@ from django.urls import reverse_lazy
 from django.conf import settings
 from django.views import View
 
-import requests
-import urllib.request, urllib.parse, urllib.error
+import requests, urllib
 # from django_tsugi.LTIX import *
 
 import jwt
@@ -50,6 +49,12 @@ class LaunchView(View) :
 
         # Lets get the keyset, retrieve the key, and cache it
         if public_key == False :
+            keyset_proxy = False
+            try :
+                if settings.TSUGI_PROXY is not False: keyset_proxy = {'http' : settings.TSUGI_PROXY}
+            except:
+                pass
+
             try :
                 keyset_url = settings.TSUGI_KEYSET
             except :
@@ -57,7 +62,8 @@ class LaunchView(View) :
                 keyset_url = "https://dev1.tsugicloud.org/tsugi/lti/keyset-ext"
 
             try:
-                dat = urllib.request.urlopen(keyset_url).read()
+                print(keyset_proxy)
+                dat = requests.get(keyset_url, proxies=keyset_proxy).text
             except:
                 dat = ""
 
