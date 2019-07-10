@@ -56,29 +56,6 @@ Quick start
             context = {'tsugi': request.tsugi, 'retval' : retval}
             return render(request, 'grade/done.html', context)
 
-Releasing to pypi.org
----------------------
-
-We release to https://pypi.org/project/django-tsugi/
-
-You need `twine` to push changes to pypi::
-
-    pip3 install twine           # If needed
-    pip install --upgrade twine  # If needed
-    pip3 install twine==1.12.1   # If needed since later twines mess up
-
-To release a whole new version, update the version in `setup.py` and then::
-
-    rm dist/*
-
-    python3 setup.py sdist
-
-    twine check dist/*
-
-    twine upload dist/*
-
-You cannot upload the same version number twice.
-
 Revising and testing locally
 ----------------------------
 
@@ -99,6 +76,29 @@ The artifacts reside in `dist`. To install locally::
 Or::
 
     pip3 install dist/django-tsugi-*.tar.gz
+
+Releasing to pypi.org
+---------------------
+
+This library is released to https://pypi.org/project/django-tsugi/
+
+You need `twine` to push changes to pypi::
+
+    pip3 install twine           # If needed
+    pip install --upgrade twine  # If needed
+    pip3 install twine==1.12.1   # If needed since later twines mess up
+
+To release a whole new version, update the version in `setup.py` and then::
+
+    rm dist/*
+
+    python3 setup.py sdist
+
+    twine check dist/*
+
+    twine upload dist/*
+
+You cannot upload the same version number twice.
 
 
 References
