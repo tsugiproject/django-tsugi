@@ -15,6 +15,7 @@ from jwcrypto import jwk
 
 TSUGI_JWK_LIST = dict()
 TSUGI_ERROR_URL = "https://www.tsugi.org/djangoerror"
+# TSUGI_ERROR_URL = "http://localhost:8888/tsugi-org/djangoerror"
 
 class LaunchView(View) :
 
@@ -36,6 +37,7 @@ class LaunchView(View) :
 
         try:
             header = jwt.get_unverified_header(encoded)
+            int('bob')
         except:
             return self.launcherror('Could not load header from JWT',encoded)
 
