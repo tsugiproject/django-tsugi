@@ -37,7 +37,6 @@ class LaunchView(View) :
 
         try:
             header = jwt.get_unverified_header(encoded)
-            int('bob')
         except:
             return self.launcherror('Could not load header from JWT',encoded)
 
