@@ -170,31 +170,45 @@ class CookielessSessionMiddleware:
             session_key = self._sesh.encrypt(request, request.session.session_key)
 
             if self.settings.get("USE_GET", False) and session_key:
-                if type(response) is HttpResponseRedirect:
+                if type(response) is HttpResponseRedirect or type(response) is django.http.response.HttpResponseRedirect:
                     host = request.META.get("HTTP_HOST", "localhost")
                     redirect_url = [
                         x[1] for x in response.items() if x[0] == "Location"
                     ][0]
-                    if redirect_url.find(host) > -1:
-                        redirect_url = self._sesh.prepare_url(redirect_url)
-                        return HttpResponseRedirect(
-                            "%s%s=%s" % (redirect_url, name, session_key)
-                        )
-                    else:
+                    if ( redirect_url.find('https://') == 0 or  redirect_url.find('http://') == 0 or
+                        redirect_url.find('//') == 0 ) :
                         return HttpResponseRedirect(redirect_url)
+
+                    redirect_url = self._sesh.prepare_url(redirect_url)
+                    return HttpResponseRedirect(
+                        "%s%s=%s" % (redirect_url, name, session_key)
+                    )
 
             def new_url(match):
                 anchor_value = ""
                 if match.groupdict().get("anchor"):
                     anchor_value = match.groupdict().get("anchor")
-                return_str = '<a%shref="%s%s=%s%s"%s>' % (
-                    match.groupdict()["pre_href"],
-                    self._sesh.prepare_url(match.groupdict()["in_href"]),
-                    name,
-                    session_key,
-                    anchor_value,
-                    match.groupdict()["post_href"],
-                )
+                href_value = ""
+                if match.groupdict().get("in_href"):
+                    href_value = match.groupdict().get("in_href")
+
+                if ( href_value.find('https://') == 0 or  href_value.find('http://') == 0 or
+                    href_value.find('//') == 0 or  href_value.find('javascript:') == 0 ) :
+                    return_str = '<a%shref="%s"%s>' % (
+                        match.groupdict()["pre_href"],
+                        href_value,
+                        match.groupdict()["post_href"],
+                    )
+                else :
+                    return_str = '<a%shref="%s%s=%s%s"%s>' % (
+                        match.groupdict()["pre_href"],
+                        self._sesh.prepare_url(href_value),
+                        name,
+                        session_key,
+                        anchor_value,
+                        match.groupdict()["post_href"],
+                    )
+
                 return return_str
 
             if self.settings.get("USE_GET", False):

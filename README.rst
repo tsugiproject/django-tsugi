@@ -69,13 +69,6 @@ tsugi app, you can release a new version locally with::
 
     python3 setup.py sdist ;  pip3 install dist/*.tar.gz
 
-The artifacts reside in `dist`. To install locally::
-
-    pip3 install --user dist/django-tsugi-*.tar.gz
-
-Or::
-
-    pip3 install dist/django-tsugi-*.tar.gz
 
 Releasing to pypi.org
 ---------------------
@@ -90,11 +83,7 @@ You need `twine` to push changes to pypi::
 
 To release a whole new version, update the version in `setup.py` and then::
 
-    rm dist/*
-
-    python3 setup.py sdist
-
-    twine check dist/*
+    rm dist/* ; python3 setup.py sdist ; twine check dist/*
 
     twine upload dist/*
 
