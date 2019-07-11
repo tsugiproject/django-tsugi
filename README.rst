@@ -67,7 +67,7 @@ can use the following in `settings.py`::
 If you are working on a new version of this library with a django
 tsugi app, you can release a new version locally with::
 
-    python3 setup.py sdist
+    python3 setup.py sdist ;  pip3 install dist/*.tar.gz
 
 The artifacts reside in `dist`. To install locally::
 
