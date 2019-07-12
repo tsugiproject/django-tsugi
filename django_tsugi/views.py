@@ -89,8 +89,6 @@ class LaunchView(View) :
                 TSUGI_JWK_LIST.clear()
             TSUGI_JWK_LIST[kid] = public_key
 
-        public_key = 'bob'
-
         try:
             lti_launch = jwt.decode(encoded, public_key, algorithms=['RS256'])
             print('Forwarding valid launch')
