@@ -19,7 +19,7 @@ TSUGI_ERROR_URL = "https://www.tsugi.org/djangoerror"
 class LaunchView(View) :
 
     def launcherror(self, error, detail=False) :
-        url = TSUGI_ERROR_URL + '?detail=' + urllib.parse.urlencode({'detail': error})
+        url = TSUGI_ERROR_URL + '?' + urllib.parse.urlencode({'detail': error})
         # retval = HttpResponseRedirect(url)
         retval = redirect(url)
         if ( detail ) : retval['X-Tsugi-Detail'] = detail
@@ -89,12 +89,14 @@ class LaunchView(View) :
                 TSUGI_JWK_LIST.clear()
             TSUGI_JWK_LIST[kid] = public_key
 
+        public_key = 'bob'
+
         try:
             lti_launch = jwt.decode(encoded, public_key, algorithms=['RS256'])
             print('Forwarding valid launch')
             print(lti_launch)
-        except:
-            return self.launcherror('Could not validate JSON Web Token signature',encoded)
+        except Exception as e:
+            return self.launcherror('Could not decode JSON Web Token: '+str(e),encoded)
 
         request.session['lti_launch'] = lti_launch
         return redirect(reverse_lazy(success_url))
