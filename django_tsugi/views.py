@@ -1,10 +1,11 @@
-from django.http import HttpResponse
-from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, redirect, reverse
 from django.urls import reverse_lazy
 
 from django.conf import settings
 from django.views import View
+
+from django_tsugi.mixins import TsugiMixin
 
 import requests, urllib
 # from django_tsugi.LTIX import *
@@ -25,11 +26,11 @@ class LaunchView(View) :
         if ( detail ) : retval['X-Tsugi-Detail'] = detail
         return retval
 
-    def get(self, request, success_url) :
+    def get(self, request, success_url=None) :
         return self.launcherror('This is a Launch URL, expecting a POST with a JWT to initiate a launch')
 
 
-    def post(self, request, success_url) :
+    def post(self, request, success_url=None) :
         encoded = request.POST.get('JWT')
         if encoded is None:
             return self.launcherror('This URL is expecting a POST with a JWT to initiate a launch')
@@ -97,5 +98,119 @@ class LaunchView(View) :
             return self.launcherror('Could not decode JSON Web Token: '+str(e),encoded)
 
         request.session['lti_launch'] = lti_launch
-        return redirect(reverse_lazy(success_url))
+
+        # Check to see how they want us to launch...
+        debug = request.GET.get('debug')
+        force_cookie = request.GET.get('force_cookie')
+        if success_url:
+            destination = success_url
+        else:
+            destination = request.GET.get('destination', None)
+
+        if destination is None:
+            return self.launcherror('Must have a success_url or a destination parameter')
+
+        redirect_url = reverse_lazy(destination)
+        if debug == "true" or force_cookie == "true" :
+            redirect_url = reverse('django_tsugi:start')
+
+        # Copy GET parameters
+        params = request.GET.copy()
+        redirect_url = redirect_url + "?" + urllib.parse.urlencode(params)
+        return redirect(redirect_url)
+
+# TODO: Allow overrides of the templates
+
+# This is a no-cookie view
+class StartView(TsugiMixin, View):
+
+    def get(self, request) :
+        force_cookie = request.GET.get('force_cookie')
+        destination = request.GET.get('destination')
+        debug = request.GET.get('debug')
+        if debug == 'true': print('In GET', destination, force_cookie)
+        if not destination : 
+            return redirect('django_tsugi:error')
+
+        force_cookie = force_cookie == 'true'
+        redirect_url = reverse(destination)
+        if not force_cookie :
+            if debug == 'true' : 
+                print('Direct redirect to',redirect_url)
+                return HttpResponse('<a href="'+redirect_url+'">Continue to '+redirect_url+'</a>')
+            return HttpResponseRedirect(redirect_url)
+
+        # Run through the process to open in a new tab and establish a cookie
+        set_cookie_url = reverse('django_tsugi:setcookie')
+        if debug == 'true' : set_cookie_url = reverse('django_tsugi:presetcookie');
+        set_cookie_url = set_cookie_url + "?" + urllib.parse.urlencode({'destination': destination, 'tsugisession': request.session.session_key, 'debug' : debug})
+        context = {'tsugi': request.tsugi, 'nexturl' : set_cookie_url}
+        return render(request, 'tsugi/checktop.html', context)
+
+class ErrorView(TsugiMixin, View):
+
+    def get(self, request) :
+        context = {'tsugi': request.tsugi }
+        return render(request, 'tsugi/error.html', context)
+
+# Pause before we transfer the launch data
+class PreSetCookieView(TsugiMixin,View):
+
+    def get(self, request) :
+        tsugisession = request.GET.get('tsugisession')
+        destination = request.GET.get('destination')
+        debug = request.GET.get('debug')
+        if debug == 'true': print('PreSetCookieView destination', destination)
+        nxt = reverse('django_tsugi:setcookie') + '?' +  urllib.parse.urlencode({'tsugisession': tsugisession, 'destination' : destination, 'debug': debug})
+        resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+        return resp
+
+# Transfer the launch data
+class SetCookieView(View):
+
+    def get(self, request) :
+        sessionid = request.GET.get('sessionid')
+        tsugisession = request.GET.get('tsugisession')
+        destination = request.GET.get('destination')
+        debug = request.GET.get('debug')
+        if debug == 'true':
+            print('SetCookieView', sessionid)
+            print('request.session.session_key', request.session.session_key)
+            print('tsugisession', tsugisession)
+            print('destination', destination)
+            print('count', len(request.session.keys()))
+        nxt = reverse('django_tsugi:forward')
+
+        # tsugisession has done its part in the process so we drop it
+        nxt = reverse('django_tsugi:forward') + '?' +  urllib.parse.urlencode({'destination' : destination, 'debug': debug})
+
+        resp = HttpResponseRedirect(nxt)
+        if debug == 'true' : resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+        resp.set_cookie('sessionid', tsugisession, path='/') # No expired date = until browser close
+        resp.set_cookie('tsugiusedacookie', 42, max_age=1000, path='/') # seconds until expire
+        return resp
+
+class ForwardView(View):
+
+    def get(self, request) :
+        sessionget = request.GET.get('sessionid')
+        sessioncookie = request.COOKIES.get('sessionid')
+        destination = request.GET.get('destination')
+        debug = request.GET.get('debug')
+        if debug == 'true':
+            print('ForwardView', sessionget, sessioncookie)
+            print('destination', destination)
+            print('request.session.session_key', request.session.session_key)
+            print('count', len(request.session.keys()))
+
+        nxt = reverse(destination)
+        resp = HttpResponseRedirect(nxt);
+        if debug == 'true' : resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+        return resp
+
+# References
+
+# https://stackoverflow.com/questions/5690213/how-to-check-if-a-template-exists-in-django
+# django.template.loader.select_template(['custom_template','default_template'])
+# This will load the first existing template in the list.
 

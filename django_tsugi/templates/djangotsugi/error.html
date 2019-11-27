@@ -1,0 +1,22 @@
+<h1>Launch Error</h1>
+<p>
+Welcome {{ tsugi.user.displayname }} from {{ tsugi.context.title }}
+{% if tsugi.user.instructor %}
+(Instructor)
+{% endif %}
+<p>
+It seems you have made an error in the configuration.  This
+application required a destination view as part of the launch
+url.
+<pre>
+https://.../tsugi/launch?destination=grade:main
+</pre>
+</p>
+{% if tsugi.user.instructor %}
+<p>
+Launch Debug:
+<pre>
+{{ tsugi.lti_launch_debug }}
+</pre>
+</p>
+{% endif %}

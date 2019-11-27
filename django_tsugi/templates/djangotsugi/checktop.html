@@ -1,0 +1,19 @@
+<html>
+    <head>
+    <title>Check if we are in the top frame or not</title>
+    </head>
+<body>
+<script>
+    if(window === top) {
+        console.log("TOP");
+        {% if DEBUG_PAUSE %}
+            document.write('<a href="{{ nexturl|safe }}">Continue to {{ nexturl }}</a>');
+        {% else %}
+            window.location = "{{ nexturl|safe }}";
+        {% endif %}
+    } else {
+        console.log("Frame");
+        document.write('<a href="{{ nexturl|safe }}" target="_blank">This application needs to open a new window/tab</a>');
+    }
+</script>
+</body>
