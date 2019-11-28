@@ -97,25 +97,33 @@ class LaunchView(View) :
         except Exception as e:
             return self.launcherror('Could not decode JSON Web Token: '+str(e),encoded)
 
-        request.session['lti_launch'] = lti_launch
-
         # Check to see how they want us to launch...
         debug = request.GET.get('debug')
         force_cookie = request.GET.get('force_cookie')
-        if success_url:
+        if success_url :
             destination = success_url
+            print('from successurl',destination)
         else:
             destination = request.GET.get('destination', None)
+            print('from GET',destination)
 
         if destination is None:
             return self.launcherror('Must have a success_url or a destination parameter')
 
-        redirect_url = reverse_lazy(destination)
+        lti_launch['launch_destination'] = destination
+        lti_launch['launch_force_cookie'] = force_cookie
+        lti_launch['launch_debug'] = debug
+        request.session['lti_launch'] = lti_launch
+
+        redirect_url = reverse(destination)
+        request.session['lti_destination'] = redirect_url
         if debug == "true" or force_cookie == "true" :
             redirect_url = reverse('django_tsugi:start')
 
+
         # Copy GET parameters
         params = request.GET.copy()
+        params['destination'] = destination
         redirect_url = redirect_url + "?" + urllib.parse.urlencode(params)
         return redirect(redirect_url)
 
