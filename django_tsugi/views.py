@@ -64,7 +64,7 @@ class LaunchView(View) :
 
             try:
                 print(keyset_proxy)
-                dat = requests.get(keyset_url, proxies=keyset_proxy).text
+                dat = requests.get(keyset_url, proxies=keyset_proxy, timeout=10).text
             except:
                 dat = ""
 
@@ -151,9 +151,12 @@ class StartView(TsugiMixin, View):
         # Run through the process to open in a new tab and establish a cookie
         set_cookie_url = reverse('django_tsugi:setcookie')
         if debug == 'true' : set_cookie_url = reverse('django_tsugi:presetcookie');
+
         set_cookie_url = set_cookie_url + "?" + urllib.parse.urlencode({'destination': destination, 'tsugisession': request.session.session_key, 'debug' : debug})
         context = {'tsugi': request.tsugi, 'nexturl' : set_cookie_url}
-        return render(request, 'tsugi/checktop.html', context)
+        resp = render(request, 'tsugi/checktop.html', context)
+        resp.set_cookie('sessionid', request.session.session_key, path='/') 
+        return resp
 
 class ErrorView(TsugiMixin, View):
 
@@ -169,44 +172,105 @@ class PreSetCookieView(TsugiMixin,View):
         destination = request.GET.get('destination')
         debug = request.GET.get('debug')
         if debug == 'true': print('PreSetCookieView destination', destination)
-        nxt = reverse('django_tsugi:setcookie') + '?' +  urllib.parse.urlencode({'tsugisession': tsugisession, 'destination' : destination, 'debug': debug})
-        resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+
+        nxt = reverse('django_tsugi:setcookie') + '?' +  urllib.parse.urlencode({
+            'tsugisession': tsugisession,
+            'destination' : destination,
+            'debug': debug})
+
+        if debug == 'true': 
+            resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+        else:
+            resp = HttpResponse('<a href="'+nxt+'">Continue...</a>')
+        resp.set_cookie('sessionid', tsugisession, path='/') 
         return resp
 
 # Transfer the launch data
 class SetCookieView(View):
 
     def get(self, request) :
-        sessionid = request.GET.get('sessionid')
         tsugisession = request.GET.get('tsugisession')
         destination = request.GET.get('destination')
         debug = request.GET.get('debug')
         if debug == 'true':
-            print('SetCookieView', sessionid)
+            print('SetCookieView')
             print('request.session.session_key', request.session.session_key)
             print('tsugisession', tsugisession)
             print('destination', destination)
             print('count', len(request.session.keys()))
-        nxt = reverse('django_tsugi:forward')
 
-        # tsugisession has done its part in the process so we drop it
-        nxt = reverse('django_tsugi:forward') + '?' +  urllib.parse.urlencode({'destination' : destination, 'debug': debug})
+        nxt = reverse('django_tsugi:checkcookie') + '?' +  urllib.parse.urlencode({
+            'tsugisession': tsugisession,
+            'destination' : destination,
+            'debug': debug})
 
         resp = HttpResponseRedirect(nxt)
-        if debug == 'true' : resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
-        resp.set_cookie('sessionid', tsugisession, path='/') # No expired date = until browser close
-        resp.set_cookie('tsugiusedacookie', 42, max_age=1000, path='/') # seconds until expire
+        if debug == 'true': 
+            resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+        ## else:
+            ## resp = HttpResponse('<a href="'+nxt+'">Continue CookieView</a>')
+
+        resp.set_cookie('sessionid', tsugisession, path='/') 
+        return resp
+
+# Transfer the launch data
+class CheckCookieView(View):
+
+    def get(self, request) :
+        sessionid = request.COOKIES.get('sessionid')
+        tsugisession = request.GET.get('tsugisession')
+        destination = request.GET.get('destination')
+        debug = request.GET.get('debug')
+        count = request.GET.get('count', 1)
+        if debug == 'true':
+            print('CheckCookieView')
+            print('request.session.session_key', request.session.session_key)
+            print('sessionid', sessionid)
+            print('tsugisession', tsugisession)
+            print('destination', destination)
+            print('count', len(request.session.keys()))
+
+        # tsugisession has done its part in the process so we drop it
+        if ( tsugisession == sessionid ) :
+            nxt = reverse('django_tsugi:forward') + '?' +  urllib.parse.urlencode({'destination' : destination, 'debug': debug})
+
+            resp = HttpResponseRedirect(nxt)
+            if debug == 'true': 
+                resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+            return resp
+
+        # From PresetCookieView
+        count = count + 1
+        if count > 5 : 
+            resp = HttpResponse('<p>Unable to set session cookie..</p>')
+            return resp
+
+        print('Attempting pass '+str(count)+' through tsugi:setcookie')
+        nxt = reverse('django_tsugi:setcookie') + '?' +  urllib.parse.urlencode({
+            'tsugisession': tsugisession,
+            'destination' : destination,
+            'count' : count,
+            'debug': debug})
+
+        # Passes 1 and 2 are redirects, for pass 3 we pause for user input
+        if count < 3 :
+            resp = HttpResponseRedirect(nxt)
+        else:
+            resp = HttpResponse('<a href="'+nxt+'">Continue...</a>')
+
+        if debug == 'true': 
+            resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+
+        resp.set_cookie('sessionid', tsugisession, path='/') 
         return resp
 
 class ForwardView(View):
 
     def get(self, request) :
-        sessionget = request.GET.get('sessionid')
-        sessioncookie = request.COOKIES.get('sessionid')
         destination = request.GET.get('destination')
         debug = request.GET.get('debug')
         if debug == 'true':
-            print('ForwardView', sessionget, sessioncookie)
+            print('ForwardView')
             print('destination', destination)
             print('request.session.session_key', request.session.session_key)
             print('count', len(request.session.keys()))
@@ -214,6 +278,7 @@ class ForwardView(View):
         nxt = reverse(destination)
         resp = HttpResponseRedirect(nxt);
         if debug == 'true' : resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
+        resp.set_cookie('tsugiusedacookie', 42, path='/') 
         return resp
 
 # References

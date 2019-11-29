@@ -13,6 +13,7 @@ urlpatterns = [
     path('error', no_cookies(views.ErrorView.as_view()), name='error'),
     path('presetcookie', no_cookies(views.PreSetCookieView.as_view()), name="presetcookie" ),
     path('setcookie', views.SetCookieView.as_view(), name="setcookie" ),
+    path('checkcookie', views.CheckCookieView.as_view(), name="checkcookie" ),
     path('forward', views.ForwardView.as_view(), name="forward" ),
 
 ]
