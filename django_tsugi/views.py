@@ -62,21 +62,28 @@ class LaunchView(View) :
                 print("Please set TSUGI_KEYSET in your settings.py, using dev1.tsugicloud.org as default")
                 keyset_url = "https://dev1.tsugicloud.org/tsugi/lti/keyset-ext"
 
+            status_code = False
             try:
-                print(keyset_proxy)
-                dat = requests.get(keyset_url, proxies=keyset_proxy, timeout=10).text
-            except:
-                dat = ""
+                if keyset_proxy : print(keyset_proxy)
+                response = requests.get(keyset_url, proxies=keyset_proxy, timeout=10)
+                status_code = response.status_code
+                dat = response.text
+            except Exception as e:
+                print('Keyset load failure', keyset_url, e)
+                return self.launcherror('Could not retrieve keyset from '+keyset_url+' ('+str(e)+')')
 
             if len(dat) < 1 :
-                return self.launcherror('Could not load keyset from '+keyset_url)
+                print('Keyset load error', keyset_url, status_code)
+                return self.launcherror('Could not load keyset from '+keyset_url+' ('+str(status_code)+')')
 
             # https://github.com/latchset/jwcrypto/blob/master/jwcrypto/tests.py
             # https://jwcrypto.readthedocs.io/en/latest/jwk.html#classes
             try:
                 ks = jwk.JWKSet()
                 ks.import_keyset(dat)
-            except:
+            except Exception as e:
+                print('Keyset parse error', keyset_url, e)
+                print(dat[:1000])
                 return self.launcherror('Could not parse keyset from '+keyset_url,encoded)
 
 
@@ -84,6 +91,8 @@ class LaunchView(View) :
                 k1 = ks.get_key(kid)
                 public_key = jwk.JWK.export_to_pem(k1)
             except:
+                print('Keyset extract error', keyset_url)
+                print(dat[:1000])
                 return self.launcherror('Could not extract kid='+kid+' from '+keyset_url,encoded)
 
             if len(TSUGI_JWK_LIST) > 10 :
@@ -137,13 +146,13 @@ class StartView(TsugiMixin, View):
         destination = request.GET.get('destination')
         debug = request.GET.get('debug')
         if debug == 'true': print('In GET', destination, force_cookie)
-        if not destination : 
+        if not destination :
             return redirect('django_tsugi:error')
 
         force_cookie = force_cookie == 'true'
         redirect_url = reverse(destination)
         if not force_cookie :
-            if debug == 'true' : 
+            if debug == 'true' :
                 print('Direct redirect to',redirect_url)
                 return HttpResponse('<a href="'+redirect_url+'">Continue to '+redirect_url+'</a>')
             return HttpResponseRedirect(redirect_url)
@@ -155,7 +164,7 @@ class StartView(TsugiMixin, View):
         set_cookie_url = set_cookie_url + "?" + urllib.parse.urlencode({'destination': destination, 'tsugisession': request.session.session_key, 'debug' : debug})
         context = {'tsugi': request.tsugi, 'nexturl' : set_cookie_url}
         resp = render(request, 'tsugi/checktop.html', context)
-        resp.set_cookie('sessionid', request.session.session_key, path='/') 
+        resp.set_cookie('sessionid', request.session.session_key, path='/')
         return resp
 
 class ErrorView(TsugiMixin, View):
@@ -178,11 +187,11 @@ class PreSetCookieView(TsugiMixin,View):
             'destination' : destination,
             'debug': debug})
 
-        if debug == 'true': 
+        if debug == 'true':
             resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
         else:
             resp = HttpResponse('<a href="'+nxt+'">Continue...</a>')
-        resp.set_cookie('sessionid', tsugisession, path='/') 
+        resp.set_cookie('sessionid', tsugisession, path='/')
         return resp
 
 # Transfer the launch data
@@ -205,12 +214,12 @@ class SetCookieView(View):
             'debug': debug})
 
         resp = HttpResponseRedirect(nxt)
-        if debug == 'true': 
+        if debug == 'true':
             resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
         ## else:
             ## resp = HttpResponse('<a href="'+nxt+'">Continue CookieView</a>')
 
-        resp.set_cookie('sessionid', tsugisession, path='/') 
+        resp.set_cookie('sessionid', tsugisession, path='/')
         return resp
 
 # Transfer the launch data
@@ -235,13 +244,13 @@ class CheckCookieView(View):
             nxt = reverse('django_tsugi:forward') + '?' +  urllib.parse.urlencode({'destination' : destination, 'debug': debug})
 
             resp = HttpResponseRedirect(nxt)
-            if debug == 'true': 
+            if debug == 'true':
                 resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
             return resp
 
         # From PresetCookieView
         count = count + 1
-        if count > 5 : 
+        if count > 5 :
             resp = HttpResponse('<p>Unable to set session cookie..</p>')
             return resp
 
@@ -258,10 +267,10 @@ class CheckCookieView(View):
         else:
             resp = HttpResponse('<a href="'+nxt+'">Continue...</a>')
 
-        if debug == 'true': 
+        if debug == 'true':
             resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
 
-        resp.set_cookie('sessionid', tsugisession, path='/') 
+        resp.set_cookie('sessionid', tsugisession, path='/')
         return resp
 
 class ForwardView(View):
@@ -278,7 +287,7 @@ class ForwardView(View):
         nxt = reverse(destination)
         resp = HttpResponseRedirect(nxt);
         if debug == 'true' : resp = HttpResponse('<a href="'+nxt+'">Click '+nxt+'</a>')
-        resp.set_cookie('tsugiusedacookie', 42, path='/') 
+        resp.set_cookie('tsugiusedacookie', 42, path='/')
         return resp
 
 # References
